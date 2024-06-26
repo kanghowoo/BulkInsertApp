@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="BulkInsertApp:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BulkInsertApp_jar</output-path>
+    <root id="archive" name="BulkInsertApp.jar">
+      <element id="module-output" name="BulkInsertApp" />
+      <element id="library" level="project" name="Maven: com.google.protobuf:protobuf-java:3.21.9" />
+      <element id="library" level="project" name="Maven: com.mysql:mysql-connector-j:8.0.33" />
+      <element id="library" level="project" name="Maven: com.beust:jcommander:1.82" />
+      <element id="library" level="project" name="Maven: org.yaml:snakeyaml:2.2" />
+    </root>
+  </artifact>
+</component>
