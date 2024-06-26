@@ -12,7 +12,7 @@ import com.beust.jcommander.Parameter;
 
 public class BulkInsertApp {
 
-    public static final int USER_ID = 1;
+    public static final long USER_ID = 1;
     public static final String APPLICATION_YML = "/application.yml";
     public static final int BATCH_SIZE = 1000;
 
@@ -41,15 +41,14 @@ public class BulkInsertApp {
             connection.setAutoCommit(false);
 
             try (Statement statement = connection.createStatement()) {
-                for (int i = 1; i <= (count / BATCH_SIZE) + 1; i++) {
+                for (long i = 1; i <= count; i += BATCH_SIZE) {
                     StringBuilder sql = new StringBuilder("INSERT INTO boards (title, content, user_id) VALUES ");
+                    final String title = "test_title";
+                    final String content = "test_content";
 
                     for (int j = 1; j <= BATCH_SIZE; j++) {
-                        sql.append("('")
-                           .append("test_title").append(i).append("', '")
-                           .append("test_content").append(i).append("', '")
-                           .append(USER_ID)
-                           .append("')");
+                        final long number = (i - 1) + j;
+                        sql.append(String.format("('%s', '%s', %d)", title + number, content + number, USER_ID));
 
                         if (j < BATCH_SIZE) {
                             sql.append(", ");
