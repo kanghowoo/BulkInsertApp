@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,6 +22,12 @@ public class BulkInsertApp {
     @Parameter(names = {"--count"}, description = "Number of records to insert", required = true)
     private int count;
 
+    @Parameter(names = {"--dry-run"},
+            description = "Check app will work well or not before run app. "
+                          + "default value is true, it means app just return query statement",
+            arity = 1)
+    private boolean dryrun = true;
+
     public static void main(String[] args) {
         BulkInsertApp app = new BulkInsertApp();
         JCommander.newBuilder().addObject(app).build().parse(args);
@@ -37,28 +46,24 @@ public class BulkInsertApp {
         final String user = dataSource.get("user");
         final String password = String.valueOf(dataSource.get("password"));
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password);
+             BufferedWriter writer = new BufferedWriter(new FileWriter("BulkInsertApp_query.txt"))
+        ) {
             connection.setAutoCommit(false);
 
             try (Statement statement = connection.createStatement()) {
                 for (long i = 1; i <= count; i += BATCH_SIZE) {
-                    StringBuilder sql = new StringBuilder("INSERT INTO boards (title, content, user_id) VALUES ");
-                    final String title = "test_title";
-                    final String content = "test_content";
+                    StringBuilder sql = getBatchQuery(i);
 
-                    for (int j = 1; j <= BATCH_SIZE; j++) {
-                        final long number = (i - 1) + j;
-                        sql.append(String.format("('%s', '%s', %d)", title + number, content + number, USER_ID));
-
-                        if (j < BATCH_SIZE) {
-                            sql.append(", ");
-                        }
+                    if (dryrun) {
+                        writer.write(sql.toString());
+                        continue;
                     }
 
                     statement.executeUpdate(sql.toString());
                 }
 
-                connection.commit();
+                if (!dryrun) connection.commit();
             } catch (SQLException e) {
                 System.out.println("sql statement error : " + e.getErrorCode());
                 connection.rollback();
@@ -67,7 +72,26 @@ public class BulkInsertApp {
         } catch (SQLException e) {
             System.out.println("database connection error : " +e.getErrorCode());
             System.exit(1);
+        } catch (IOException e) {
+            System.out.println("dry run - file out error." + e.getMessage());
+            System.exit(1);
         }
+    }
+
+    private static StringBuilder getBatchQuery(long i) {
+        StringBuilder sql = new StringBuilder("INSERT INTO boards (title, content, user_id) VALUES ");
+        final String title = "test_title";
+        final String content = "test_content";
+
+        for (int j = 1; j <= BATCH_SIZE; j++) {
+            final long number = (i - 1) + j;
+            sql.append(String.format("('%s', '%s', %d)", title + number, content + number, USER_ID));
+
+            if (j < BATCH_SIZE) {
+                sql.append(", ");
+            }
+        }
+        return sql;
     }
 
     private Map<String, Object> yamlConfigReader() {
