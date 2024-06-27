@@ -47,7 +47,8 @@ public class BulkInsertApp {
         final String password = String.valueOf(dataSource.get("password"));
 
         try (Connection connection = DriverManager.getConnection(url, user, password);
-             BufferedWriter writer = new BufferedWriter(new FileWriter("BulkInsertApp_query.txt"))
+             BufferedWriter writer =
+                     dryrun ? new BufferedWriter(new FileWriter("BulkInsertApp_query.txt")) : null
         ) {
             connection.setAutoCommit(false);
 
